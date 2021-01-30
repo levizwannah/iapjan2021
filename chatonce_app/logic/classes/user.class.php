@@ -310,6 +310,22 @@
 
                 return $this;
         }
+
+        /**
+         * Persist this object to the database
+         * @return bool
+         */
+        public function persist(PDO $pdo){
+            $stmt = $pdo->prepare("UPDATE user set firstname = ?, lastname = ?, email = ?, phone = ?, `password` = ? where  `user_id` = ?");
+            if($stmt->execute(array($this->firstname, $this->lastname, $this->email, $this->phone, $this->password))){
+                $succeeded = true;
+            }else{
+                $succeeded = false;
+            }
+
+            $stmt = null;
+            return $succeeded;
+        }
     }
 
 
