@@ -8,11 +8,14 @@
     class User implements Account{
 
         private $firstname, $lastname, $email, $phone, $user_id, $password;
+        //when a property that doesn't exist in this object gets set or gotten.
+        private $runtimeAttritubes = [];
 
         
         
         /**
-         * The user name details are already set
+         * The user details are already set
+         * @return bool|array of errors
          */
         public function register (PDO $pdo){
             //validating all data
@@ -35,7 +38,9 @@
             }
 
             //check if email exist
-            
+            if(Utility::emailExist($this->email)){
+                $errors[] = "emee";//email exist error
+            }
 
             if(strlen($this->password) < 9){
                 $errors[] = "ple"; //password length error
@@ -82,19 +87,120 @@
 
         }
 
+        /**
+         * Logs a user in to the system
+         * the user email and password must be set before this method is called.
+         * String return: uee (user exist error: the user does not exist).
+         * String return: pwe (password error: the user password is wrong but they exist).
+         * @return string|bool
+         */
         public function login(PDO $pdo){
             $stmt = $pdo->prepare("SELECT * from user where email = ?");
+            $stmt->execute(array($this->email));
+            $result = $stmt->fetch();
+            $stmt = null;
+            if(count($result) > 0){
+                //the user exist
+                //so check the password
+                if(password_verify($this->password, $result['password'])){
+                    //define all the remaining attributes of this object
+                    $this->firstname = $result['firstname'];
+                    $this->lastname = $result['lastname'];
+                    $this->phone = $result['phone'];
+                    $this->email = $result['email']; 
+                    $this->password = $result['password'];
+                    $this->user_id = $result['user_id'];
+                    return true;
+                }
+                else{
+                    //return password error
+                    return "pwe";//password error;
+                }
+            }else{
+                //the user doesn't exist
+                return "uee"; //user exist error
+            }
 
         }
 
+        /**
+         * The new password attribute must be set before this method is called.
+         * @return bool
+         */
         public function changePassword(PDO $pdo){
+            if(password_verify($this->runtimeAttritubes['passwordTest'], $this->password)){
+                //check the new password strength
+                $new_password = $this->runtimeAttritubes['newPassword'];
 
+                if(strlen($new_password) < 9){
+                    $errors[] = "ple"; //password length error
+                }
+    
+                if(!preg_match("/[A-Z]/", $new_password)){
+                    $errors[] = "puce"; //password uppercase error
+                }
+    
+                if(!preg_match("/[a-z]/", $new_password)){
+                    $errors[] = "plce"; //password lowercase error
+                }
+    
+                if(!preg_match("/\d/", $new_password)){
+                    $errors[] = "pne"; //password number error
+                }
+
+                if($errors && count($errors) > 0){
+                    return $errors;
+                }else{
+                    //hash the new password
+                    $new_password = password_hash($new_password, PASSWORD_DEFAULT);
+                    $stmt = $pdo->prepare("UPDATE user set `password`=? where `user_id` = ?");
+                    if($stmt->execute(array($new_password, $this->user_id))){
+                        //update the current password
+                        $this->password = $new_password;
+                        $succeeded = true;
+                    }else{
+                        $succeeded = false;
+                    }
+                }
+
+                $stmt = null;
+                return $succeeded;
+            }
         }
 
+        /**
+         * If the user is logged in, this function logs them out
+         * @return bool
+         */
         public function logout (PDO $pdo){
-
+            if(session_status() == PHP_SESSION_ACTIVE){
+                session_destroy();
+                return true;
+            }else{
+                return false;
+            }
         }
 
+        /**
+         * get a runtime attribute
+         */
+        public function __get($name)
+        {
+            if(array_key_exists($name, $this->runtimeAttritubes)){
+                return $this->runtimeAttritubes[$name];
+            }else{
+                return null;
+            }
+        }
+
+        /**
+         * sets a runtime attribute
+         */
+
+        public function __set($name, $value)
+        {
+            $this->runtimeAttritubes[$name] = $value;
+        }
 
 
         /**

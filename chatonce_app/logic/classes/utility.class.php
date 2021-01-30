@@ -30,7 +30,7 @@
 
          public static function emailExist($email){
              $pdo = self::makeConnection();
-             $stmt = $pdo->prepare("SELECT `user_id` user where email = ?");
+             $stmt = $pdo->prepare("SELECT `user_id` from user where email = ?");
              $stmt->execute([$email]);
              if(count($stmt->fetchAll()) > 0){
                  $exist = true;
