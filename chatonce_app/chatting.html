@@ -11,10 +11,14 @@
         <h1 class="logo">ChatOnce</h1>
     </header>
     <main>
+        <div class="error" id="error">
+        </div>
+        <div class="success" id="success">
+        </div>
         <section class='main_grid_holder'>
             <img src="resources/profile.jpeg" alt="profile">
             <p class="user_name">Levi Kamara Zwannah</p>
-            <button class="btn_normal">Logout</button>
+            <button class="btn_normal" onclick="logout()">Logout</button>
             <div class="chat_display">
                 <div class="box_shadow chat">
 
@@ -28,5 +32,9 @@
         </section>
         
     </main>
+    <footer>
+        <script src="js/classes/Utility.js"></script>
+        <script src="js/chatting.js"></script>
+    </footer>
 </body>
 </html>

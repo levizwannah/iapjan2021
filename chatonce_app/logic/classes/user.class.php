@@ -1,17 +1,41 @@
 <?php
 
     require_once('../interfaces/account.interface.php');
-    require_once('utility.class.php');
+    //require_once('utility.class.php');
 
 
 
     class User implements Account{
 
         private $firstname, $lastname, $email, $phone, $user_id, $password;
+
+        //when password change is to be made
+        private $new_password, $old_password;
         //when a property that doesn't exist in this object gets set or gotten.
         private $runtimeAttritubes = [];
 
-        
+        /**
+         * If the user Id is passed, the pdo must also be passed.
+         * Passing the user Id means constructing a user with all details from the database.
+         * If no user Id is passed, then an empty user is created.
+         * @return void
+         */
+        public function __construct($user_id = false, PDO $pdo = null)
+        {
+            //Todo
+            if($user_id && $pdo){
+                $stmt = $pdo->prepare("SELECT * from user where `user_id` = ?");
+                $stmt->execute([$user_id]);
+                $result = $stmt->fetch();
+                $this->firstname = $result['first_name'];
+                $this->lastname = $result['last_name'];
+                $this->phone = $result['phone'];
+                $this->email = $result['email']; 
+                //the password is hashed
+                $this->password = $result['password'];
+                $this->user_id = $result['user_id'];
+            }
+        }
         
         /**
          * The user details are already set
@@ -21,11 +45,11 @@
             //validating all data
             $errors = [];
 
-            if(!preg_match('/^[A-Za-z\'-]$/', $this->firstname)){
+            if(!preg_match('/^[A-Za-z\'-]+$/', $this->firstname)){
                 $errors[] = "fne"; //first name error
             }
 
-            if(!preg_match('/^[A-Za-z\'-]$/', $this->lastname)){
+            if(!preg_match('/^[A-Za-z\'-]+$/', $this->lastname)){
                 $errors[] = "lne"; //last name error
             }
 
@@ -55,7 +79,7 @@
             }
 
             if(!preg_match("/\d/", $this->password)){
-                $errors[] = "pne"; //password number error
+                $errors[] = "pwne"; //password number error
             }
 
             //if no errors, proceed
@@ -99,7 +123,7 @@
             $stmt->execute(array($this->email));
             $result = $stmt->fetch();
             $stmt = null;
-            if(count($result) > 0){
+            if($result && count($result) > 0){
                 //the user exist
                 //so check the password
                 if(password_verify($this->password, $result['password'])){
@@ -128,9 +152,9 @@
          * @return bool
          */
         public function changePassword(PDO $pdo){
-            if(password_verify($this->runtimeAttritubes['passwordTest'], $this->password)){
+            if(password_verify($this->old_password, $this->password)){
                 //check the new password strength
-                $new_password = $this->runtimeAttritubes['newPassword'];
+                $new_password = $this->new_password;
 
                 if(strlen($new_password) < 9){
                     $errors[] = "ple"; //password length error
@@ -179,6 +203,21 @@
             }else{
                 return false;
             }
+        }
+
+        public function deleteUser(PDO $pdo){
+            $stmt = $pdo->prepare("DELETE from user where `user_id` = ?");
+            if($stmt->execute([$this->user_id])){
+                $image = Utility::returnImageSrc($this->user_id);
+            if(file_exists($image) && $image != "../"){
+                unlink($image);
+            }
+               $return = true;
+            }else{
+                $return = false;
+            }
+            $stmt = null;
+            return $return;
         }
 
         /**
@@ -311,13 +350,21 @@
                 return $this;
         }
 
+        public function setNewPassword($newPassword){
+            $this->new_password = $newPassword;
+        }
+
+        public function setTestOldPassword($old_password){
+            $this->old_password = $old_password;
+        }
+
         /**
          * Persist this object to the database
          * @return bool
          */
         public function persist(PDO $pdo){
-            $stmt = $pdo->prepare("UPDATE user set firstname = ?, lastname = ?, email = ?, phone = ?, `password` = ? where  `user_id` = ?");
-            if($stmt->execute(array($this->firstname, $this->lastname, $this->email, $this->phone, $this->password))){
+            $stmt = $pdo->prepare("UPDATE user set firstname = ?, lastname = ?, email = ?, phone = ? where  `user_id` = ?");
+            if($stmt->execute(array($this->firstname, $this->lastname, $this->email, $this->phone))){
                 $succeeded = true;
             }else{
                 $succeeded = false;

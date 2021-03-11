@@ -18,6 +18,7 @@
                 return $pdo_conn;
             }
             catch(PDOException $ex){
+                // echo "{$ex->getMessage()}";
                 return $ex->getMessage();
             }
             
@@ -43,6 +44,68 @@
 
              return $exist;
          }
+
+         public static function returnImageSrc($user_id){
+            $extArray = array("jpg", "jpeg", "png", "gif");
+            foreach($extArray as $ext){
+                 foreach(glob("../uploads/".$user_id."*".$ext) as $file){
+                     return substr($file, 3);
+                 }
+            }
+              return false;
+         }
+
+         /**
+          * checks if an accepted image was uploaded
+          */
+         public static function is_image($path){
+           $check = getimagesize($path);
+           if(in_array($check[2], array('jpg', IMAGETYPE_GIF, IMAGETYPE_JPEG, IMAGETYPE_PNG, IMAGETYPE_BMP))){
+               return true;
+           }
+           return false;
+         }
+
+         /**
+          * Moves and image to the uploads directory
+          */
+         public static function uploadImage(&$image, $id, $update = false){
+            $target_dir = "../uploads/";
+            $ext = pathinfo($image['name'], PATHINFO_EXTENSION);
+            $ext = strtolower($ext);
+            if($update){
+                unlink("../".self::returnImageSrc($id));
+            }
+            switch (exif_imagetype($image['tmp_name'])) {
+                case IMAGETYPE_PNG:
+                    $imageTmp=imagecreatefrompng($image['tmp_name']);
+                    break;
+                case IMAGETYPE_JPEG:
+                    $imageTmp=imagecreatefromjpeg($image['tmp_name']);
+                    break;
+                case IMAGETYPE_GIF:
+                    $imageTmp=imagecreatefromgif($image['tmp_name']);
+                    break;
+                case IMAGETYPE_BMP:
+                    $imageTmp=imagecreatefrombmp($image['tmp_name']);
+                    break;
+                // Defaults to JPG
+                default:
+                    $imageTmp=imagecreatefromjpeg($image['tmp_name']);
+                    break;
+            }
+        
+            // quality is a value from 0 (worst) to 100 (best)
+            if(imagejpeg($imageTmp, $target_dir.$id."-".uniqid().".".$ext, 65)){
+                imagedestroy($imageTmp);
+                return true;
+            }
+            else{
+                imagedestroy($imageTmp);
+                return false;
+            }
+        }
+        
     }
 
 

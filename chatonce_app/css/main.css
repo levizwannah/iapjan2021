@@ -119,7 +119,19 @@ UTILITY CLASSES
     width: 100%;
 }
 
+.hidden{
+    display: none;
+}
 
+.error{
+    padding: 5px;
+    color: red;
+}
+
+.success{
+    padding: 5px;
+    color: green;
+}
 /* -------------------------------------------------
                     SIGNUP PAGE 
 ------------------------------------------------- */
