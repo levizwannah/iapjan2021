@@ -10,7 +10,7 @@ loginBtn.addEventListener("click", function(){
 });
 
 signBtn.addEventListener("click", function(){
-    location.href="signup.html";
+    location.href="signup.php";
 });
 
  function handleResponse(xhttp){
@@ -30,7 +30,7 @@ signBtn.addEventListener("click", function(){
             }
         case "yes":
             {
-                location.href = "chatting.html";
+                location.href = "chatting.php";
             }
         default:
             {

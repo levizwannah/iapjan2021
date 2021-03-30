@@ -138,7 +138,7 @@ function handleResponse(xhttp){
             {
                 Utility.showSuccess("You successfully signed up. Proceeding to login...");
                 setTimeout(() => {
-                    location.href = "login.html";
+                    location.href = "login.php";
                 }, 1500);
                 break;
             }

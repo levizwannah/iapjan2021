@@ -1,6 +1,6 @@
 <?php
 
-    require_once('../interfaces/account.interface.php');
+    //require_once('../interfaces/account.interface.php');
     //require_once('utility.class.php');
 
 
@@ -27,8 +27,8 @@
                 $stmt = $pdo->prepare("SELECT * from user where `user_id` = ?");
                 $stmt->execute([$user_id]);
                 $result = $stmt->fetch();
-                $this->firstname = $result['first_name'];
-                $this->lastname = $result['last_name'];
+                $this->firstname = $result['firstname'];
+                $this->lastname = $result['lastname'];
                 $this->phone = $result['phone'];
                 $this->email = $result['email']; 
                 //the password is hashed
